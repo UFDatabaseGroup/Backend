@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const indexRouter = require('./routes/index');
 const TrendQueriesRouter = require('./routes/trend-queries');
-const loginRouter = require('./routes/login');
+const AuthRouter = require('./routes/auth');
 
 const app = express();
 
@@ -19,6 +19,6 @@ app.use(cookieParser());
 
 app.use('/', indexRouter);
 app.use('/trend-queries', TrendQueriesRouter);
-app.use('/login', loginRouter);
+app.use('/auth', AuthRouter);
 
 module.exports = app;
