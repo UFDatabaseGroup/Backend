@@ -54,6 +54,31 @@ async function TrendQuery5() {
 }
 
 async function loginUser(username, password) {
+    let connection;
+    let result;
+    try {
+        connection = await oracledb.getConnection( {
+            user          : process.env.DB_USER,
+            password      : process.env.DB_PASSWD,
+            connectString : "oracle.cise.ufl.edu/orcl"
+        });
+        result = await connection.execute(
+            `SELECT user FROM Users`, // PUT TREND QUERY HERE
+            []
+        );
+        console.log(result.rows);
+    } catch (err) {
+        console.error(err);
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+    return result;
 
 }
 
