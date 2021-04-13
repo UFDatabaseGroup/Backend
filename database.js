@@ -139,6 +139,8 @@ async function registerUser(username, password) {
 
 }
 
+exports.query = query;
+exports.getTotalRowCount = getTotalRowCount;
 exports.trendQuery1 = trendQuery1;
 exports.trendQuery2 = trendQuery2;
 exports.trendQuery3 = trendQuery3;

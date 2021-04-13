@@ -4,10 +4,12 @@ var router = express.Router();
 const db = require('../database');
 
 /* GET home page. */
-router.get('/', function(req, res) {
+router.get('/', async (req, res) => {
   // res.send(`<h1>${db.trendQuery1()}</h1>`);
+  await db.readyState;
   res.send({
-    status: 'ok'
+    status: 'ok',
+    totalRowCount: await db.getTotalRowCount()
   });
 });
 
