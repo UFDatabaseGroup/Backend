@@ -19,10 +19,8 @@ router.get('/1', async (req, res) => {
   } else {
     country = req.query.country;
   }
-  // > Number.isNaN(undefined)
-  // false
-  // thanks javascript
-  if (Number.isNaN(req.query.start_time) || !req.query.start_time) {
+  // i am dumb
+  if (!req.query.start_time || Number.isNaN(+req.query.start_time)) {
     return res.status(400).send({
       status: 'error',
       error: 'required paremeter "start_time" invalid or not provided',
@@ -31,7 +29,7 @@ router.get('/1', async (req, res) => {
   } else {
     startTime = +req.query.start_time;
   }
-  if (Number.isNaN(req.query.end_time) || !req.query.end_time) {
+  if (!req.query.end_time || Number.isNaN(+req.query.end_time)) {
     return res.status(400).send({
       status: 'error',
       error: 'required paremeter "end_time" invalid or not provided',
