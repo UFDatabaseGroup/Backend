@@ -4,8 +4,11 @@ var router = express.Router();
 const db = require('../database');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.send(`<h1>${db.TrendQuery1()}</h1>`);
+router.get('/', function(req, res) {
+  // res.send(`<h1>${db.trendQuery1()}</h1>`);
+  res.send({
+    status: 'ok'
+  });
 });
 
 module.exports = router;

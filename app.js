@@ -1,8 +1,7 @@
 const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
+const database = require('./database');
 
 require('dotenv').config();
 
@@ -20,7 +19,8 @@ app.use(cors());
 //app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/trend-queries', TrendQueriesRouter);
+// do not mount trend-queries until database is confirmed alive
+database.readyState.then(() => app.use('/trend-queries', TrendQueriesRouter));
 app.use('/auth', AuthRouter);
 
 module.exports = app;
