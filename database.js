@@ -43,7 +43,8 @@ async function query(sql, bindParameters = []) {
         connection = await oracledb.getConnection();
         return await connection.execute(sql, bindParameters);
     } finally {
-        connection?.close();
+        // @ts-ignore
+        await connection.close();
     }
 }
 

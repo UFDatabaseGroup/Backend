@@ -3,7 +3,7 @@ const logger = require('morgan');
 const cors = require('cors');
 const database = require('./database');
 
-require('dotenv').config();
+//require('dotenv').config();
 
 const indexRouter = require('./routes/index');
 const TrendQueriesRouter = require('./routes/trend-queries');
@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //.use(cookieParser());
 app.use(cors());
+app.disable('etag'); // Disable 304 - caching
 //app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);

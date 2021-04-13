@@ -3,7 +3,7 @@ const { format, transports } = winston;
 const { formatWithOptions } = require('util');
 
 // import { LOG_LEVEL, LOG_COLORS } from './config';
-const LOG_LEVEL = process.env.LOG_LEVEL ?? 'debug';
+const LOG_LEVEL = process.env.LOG_LEVEL || 'debug';
 const LOG_COLORS = true; // env this maybe
 
 const FORMAT_OPTIONS = {
