@@ -1,7 +1,7 @@
 const oracledb = require('oracledb');
 const log = require('./logger');
 
-oracledb.outFormat = oracledb.OUT_FORMAT_ARRAY;
+oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
 async function init() {
     // initialize connection pool
