@@ -96,10 +96,30 @@ async function trendQuery1(country, startTime, endTime) {
  */
 async function trendQuery2(country) {
     return await query(`
-        select COVID_DATA.country, AVG(COVID_DATA.Incidence), COUNTRY.density, COVID_DATA.timestamp_id
-        from "J.LUO".COVID_DATA, "J.LUO".COUNTRY
-        where COVID_DATA.country = COUNTRY.name AND incidence is not null and density is not null AND COVID_DATA.Country = :1
-        GROUP BY COVID_DATA.Country, COUNTRY.Density, COVID_DATA.timestamp_id;
+        with state_data as (
+            select timestamp_id, state, sum(active) as active
+            from "J.LUO".COVID_DATA
+            where country = :1 and active is not null and active > 0
+            group by timestamp_id, state
+        ),
+        top_states as (
+            -- find top state by highest active cases averaged over time
+            select avg(active) as average_active, state
+            from state_data
+            group by state
+            order by average_active desc
+            fetch first 10 rows only
+        ),
+        state_totals as (
+            select timestamp_id, sum(active) as total_active
+            from state_data
+            group by timestamp_id
+        )
+        select state_data.timestamp_id, state_data.state, active, (active / total_active * 100) as active_percent
+        from state_data
+        inner join top_states on state_data.state = top_states.state
+        inner join state_totals on state_data.timestamp_id = state_totals.timestamp_id
+        order by timestamp_id, active desc
     `, [country])
 }
 
