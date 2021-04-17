@@ -1,7 +1,7 @@
 const oracledb = require('oracledb');
 const log = require('./logger');
 
-oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+oracledb.outFormat = oracledb.OUT_FORMAT_ARRAY;
 
 async function init() {
     // initialize connection pool
@@ -25,11 +25,11 @@ module.exports.readyState = readyState;
 
 async function getTotalRowCount() {
     let result = await query('select count(*) as total_count from "J.LUO".COVID_DATA');
-    if (!result.rows) {
+    if (!result.rows?.length) {
         log.error('database reports zero rows?');
         return 0;
     }
-    return result.rows[0].TOTAL_COUNT;
+    return result.rows[0][0];
 }
 
 /**
@@ -44,7 +44,7 @@ async function query(sql, bindParameters = []) {
         return await connection.execute(sql, bindParameters);
     } finally {
         // @ts-ignore
-        await connection.close();
+        await connection?.close();
     }
 }
 
@@ -91,20 +91,65 @@ async function trendQuery1(country, startTime, endTime) {
     `, [country, startTime, endTime]);
 }
 
-async function trendQuery2() {
-
+/**
+ * @param {string} country
+ */
+async function trendQuery2(country) {
+    return await query(`
+        select COVID_DATA.country, AVG(COVID_DATA.Incidence), COUNTRY.density, COVID_DATA.timestamp_id
+        from "J.LUO".COVID_DATA, "J.LUO".COUNTRY
+        where COVID_DATA.country = COUNTRY.name AND incidence is not null and density is not null AND COVID_DATA.Country = :1
+        GROUP BY COVID_DATA.Country, COUNTRY.Density, COVID_DATA.timestamp_id;
+    `, [country])
 }
 
-async function trendQuery3() {
-
+/**
+ * @param {string} country
+ */
+async function trendQuery3(country) {
+    return await query(`
+        select 
+            country, timestamp_id,
+            Total_Incidence,
+            Total_Incidence - Lag(Total_Incidence, 1) OVER(partition by country ORDER BY country ASC) AS Incidence_Difference, 
+            Total_Deaths,
+            Total_Deaths - Lag(Total_Deaths, 1) OVER(partition by country ORDER BY country ASC) AS Death_Differences 
+        FROM (
+            select country, AVG(incidence) AS Total_Incidence, SUM(deaths) AS Total_Deaths, timestamp_id 
+            FROM "J.LUO".Covid_Data
+            WHERE incidence is not null
+            Group By country, timestamp_id
+            order by country,timestamp_id
+        )
+        where country = :1
+    `, [country])
 }
 
-async function trendQuery4() {
-
+/**
+ * @param {string} country
+ */
+async function trendQuery4(country) {
+    return await query(`
+        select country, avg(Avg_Incidence), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
+            select covid_data.timestamp_id, Covid_Data.country, AVG(Covid_Data.incidence) as Avg_Incidence, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
+            FROM "J.LUO".Covid_Data, "J.LUO".Unemployment, "J.LUO".Country
+            WHERE Covid_Data.country = Unemployment.country_name AND Covid_Data.Country = Country.name AND incidence is not null 
+            AND covid_data.timestamp_id <= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) + 2592000 
+            and covid_data.timestamp_id >= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) and covid_data.country = :1
+            GROUP BY Covid_Data.Country, Covid_Data.timestamp_id, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
+            order by timestamp_id) 
+        group by country, unemployment_time_stamp, population, value
+        order by unemployment_time_stamp
+    `, [country]);
 }
 
 async function trendQuery5() {
-
+    return await query(`
+        select country, timestamp_id, (avg(case_fatality_ratio) / sum(active)) as derp_rate from "J.LUO".COVID_DATA
+        where active > 0 and case_fatality_ratio is not null
+        group by country, timestamp_id
+        order by timestamp_id asc
+    `);
 }
 
 async function loginUser(username, password) {
