@@ -108,5 +108,21 @@ router.get('/5', async (_req, res) => {
   res.send({ status: 'ok', columns: result.metaData, data: result.rows });
 });
 
+router.get('/6', async (req, res) => {
+  let country;
+  if (typeof req.query.country !== 'string') {
+    return res.status(400).send({
+      status: 'error',
+      error: 'required paremeter "country" invalid or not provided',
+      value: req.query.country
+    });
+  } else {
+    country = req.query.country;
+  }
+  log.info('trend query 6, country=%s', country);
+  let result = await database.trendQuery6(country);
+  res.send({ status: 'ok', columns: result.metaData, data: result.rows });
+});
+
 
 module.exports = router;

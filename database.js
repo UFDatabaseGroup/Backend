@@ -29,7 +29,7 @@ async function getTotalRowCount() {
         log.error('database reports zero rows?');
         return 0;
     }
-    return result.rows[0][0];
+    return result.rows[0].TOTAL_COUNT;
 }
 
 /**
@@ -169,9 +169,20 @@ async function trendQuery5() {
         from
             (select SUM(Deaths) as Deaths_Worldwide, TIMESTAMP_ID as worldTime from "J.LUO".COVID_DATA where deaths is not null group by timestamp_id) worldData,
             (select SUM(Deaths) as Deaths_Country, TIMESTAMP_ID as countryTime, Country from "J.LUO".COVID_DATA where country = 'United States' and deaths is not null group by TIMESTAMP_ID, Country) countryData
-        where worldTime = countryTime order by worldTime;
+        where worldTime = countryTime order by worldTime
     `);
 }
+
+async function trendQuery6(country) {
+    return await query(`select timestamp_id, confirmed, (confirmed - lag(confirmed, 1) over (order by timestamp_id)) as delta_confirmed
+    from (
+        select timestamp_id, sum(confirmed) as confirmed
+        from "J.LUO".COVID_DATA
+        where country = :1
+        group by timestamp_id
+    )
+    order by timestamp_id`, [country]);
+};
 
 async function loginUser(username, password) {
     let connection;
@@ -213,5 +224,6 @@ exports.trendQuery2 = trendQuery2;
 exports.trendQuery3 = trendQuery3;
 exports.trendQuery4 = trendQuery4;
 exports.trendQuery5 = trendQuery5;
+exports.trendQuery6 = trendQuery6;
 exports.loginUser = loginUser;
 exports.registerUser = registerUser;
