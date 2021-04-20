@@ -158,8 +158,18 @@ router.get('/4', async (req, res) => {
 
 // GET Fifth Trend Query
 router.get('/5', async (req, res) => {
+  let country;
   let startTime;
   let endTime;
+  if (typeof req.query.country !== 'string') {
+    return res.status(400).send({
+      status: 'error',
+      error: 'required paremeter "country" invalid or not provided',
+      value: req.query.country
+    });
+  } else {
+    country = req.query.country;
+  }
   if (!req.query.start_time || Number.isNaN(+req.query.start_time)) {
     return res.status(400).send({
       status: 'error',
@@ -178,8 +188,8 @@ router.get('/5', async (req, res) => {
   } else {
     endTime = +req.query.end_time;
   }
-  log.info('trend query 5, start_time=%d, end_time=%d', startTime, endTime);
-  let result = await database.trendQuery5(startTime, endTime);
+  log.info('trend query 5, country=%s, start_time=%d, end_time=%d', country, startTime, endTime);
+  let result = await database.trendQuery5(country, startTime, endTime);
   res.send({ status: 'ok', columns: result.metaData, data: result.rows });
 });
 
