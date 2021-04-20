@@ -1,11 +1,18 @@
 const express = require('express');
+const database = require('../database');
 const router = express.Router();
 
-router.post('/login', function(req, res, next) {
+router.post('/login', async function(req, res, next) {
     console.log("Received Login Request");
-    res.send({
-        token: '123'
-    });
+    if ( await database.loginUser(req.query.username, req.query.password)) {
+        res.send({
+            token: 'true'
+        });   
+    } else {
+        res.send({
+            token: 'false'
+        });
+    }
 });
 
 router.post('/register', function(req, res, next) {
