@@ -170,29 +170,19 @@ async function trendQuery4(country, startTime, endTime) {
     `, [country, startTime, endTime]);
 }
 
-<<<<<<< HEAD
-async function trendQuery5(country) {
-=======
 /**
  * @param {number} startTime Start time as unix time
  * @param {number} endTime End time as unix time
  */
 async function trendQuery5(startTime, endTime) {
->>>>>>> ca8aeb2a8c8e30130356ab1d19c74693fb843d57
     return await query(`
         select (Deaths_Country / Deaths_Worldwide) * 100 as Deaths_Contributed, Deaths_Country, Deaths_Worldwide, worldTime
         from
             (select SUM(Deaths) as Deaths_Worldwide, TIMESTAMP_ID as worldTime from "J.LUO".COVID_DATA where deaths is not null group by timestamp_id) worldData,
-<<<<<<< HEAD
-            (select SUM(Deaths) as Deaths_Country, TIMESTAMP_ID as countryTime, Country from "J.LUO".COVID_DATA where country = :1 and deaths is not null group by TIMESTAMP_ID, Country) countryData
-        where worldTime = countryTime order by worldTime
-    `, [country]);
-=======
             (select SUM(Deaths) as Deaths_Country, TIMESTAMP_ID as countryTime, Country from "J.LUO".COVID_DATA where country = 'United States' and deaths is not null group by TIMESTAMP_ID, Country) countryData
         where worldTime = countryTime and (worldTime >= :1 and worldTime <= :2)
         order by worldTime
     `, [startTime, endTime]);
->>>>>>> ca8aeb2a8c8e30130356ab1d19c74693fb843d57
 }
 
 /**
@@ -213,10 +203,12 @@ async function trendQuery6(country, startTime, endTime) {
 
 async function loginUser(username, password) {
     let result = await query(`SELECT * FROM "J.LUO".Users`);
-    result.rows?.forEach((elem) => {
-        if (elem.USERNAME === username && elem.PASSWORD === password) return false;
-    });
-    return true;
+    if(!result.rows) return false;
+
+    for (let elem of result.rows) {
+        if (elem.USERNAME === username && elem.PASSWORD === password) return true;
+    }
+    return false;
 }
 
 async function registerUser(username, password) {
