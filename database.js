@@ -180,7 +180,7 @@ async function trendQuery5(startTime, endTime) {
         from
             (select SUM(Deaths) as Deaths_Worldwide, TIMESTAMP_ID as worldTime from "J.LUO".COVID_DATA where deaths is not null group by timestamp_id) worldData,
             (select SUM(Deaths) as Deaths_Country, TIMESTAMP_ID as countryTime, Country from "J.LUO".COVID_DATA where country = 'United States' and deaths is not null group by TIMESTAMP_ID, Country) countryData
-        where worldTime = countryTime and (timestamp_id >= :1 and timestamp_id <= :2)
+        where worldTime = countryTime and (worldTime >= :1 and worldTime <= :2)
         order by worldTime
     `, [startTime, endTime]);
 }
