@@ -92,14 +92,16 @@ async function trendQuery1(country, startTime, endTime) {
 }
 
 /**
- * @param {string} country
+ * @param {string} country Country name
+ * @param {number} startTime Start time as unix time
+ * @param {number} endTime End time as unix time
  */
-async function trendQuery2(country) {
+async function trendQuery2(country, startTime, endTime) {
     return await query(`
         with state_data as (
             select timestamp_id, state, sum(active) as active
             from "J.LUO".COVID_DATA
-            where country = :1 and active is not null and active > 0
+            where active is not null and active > 0 and country = :1 and (timestamp_id >= :2 and timestamp_id <= :3)
             group by timestamp_id, state
         ),
         top_states as (
@@ -120,13 +122,15 @@ async function trendQuery2(country) {
         inner join top_states on state_data.state = top_states.state
         inner join state_totals on state_data.timestamp_id = state_totals.timestamp_id
         order by timestamp_id, active desc
-    `, [country])
+    `, [country, startTime, endTime])
 }
 
 /**
- * @param {string} country
+ * @param {string} country Country name
+ * @param {number} startTime Start time as unix time
+ * @param {number} endTime End time as unix time
  */
-async function trendQuery3(country) {
+async function trendQuery3(country, startTime, endTime) {
     return await query(`
         select 
             country, timestamp_id,
@@ -141,47 +145,60 @@ async function trendQuery3(country) {
             Group By country, timestamp_id
             order by country,timestamp_id
         )
-        where country = :1
-    `, [country])
+        where country = :1 and (timestamp_id >= :2 and timestamp_id <= :3)
+    `, [country, startTime, endTime])
 }
 
 /**
- * @param {string} country
+ * @param {string} country Country name
+ * @param {number} startTime Start time as unix time
+ * @param {number} endTime End time as unix time
  */
-async function trendQuery4(country) {
+async function trendQuery4(country, startTime, endTime) {
     return await query(`
         select country, avg(Avg_Incidence), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
             select covid_data.timestamp_id, Covid_Data.country, AVG(Covid_Data.incidence) as Avg_Incidence, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
             FROM "J.LUO".Covid_Data, "J.LUO".Unemployment, "J.LUO".Country
             WHERE Covid_Data.country = Unemployment.country_name AND Covid_Data.Country = Country.name AND incidence is not null 
             AND covid_data.timestamp_id <= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) + 2592000 
-            and covid_data.timestamp_id >= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) and covid_data.country = :1
+            and covid_data.timestamp_id >= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400)
+            and covid_data.country = :1 and (timestamp_id >= :2 and timestamp_id <= :3)
             GROUP BY Covid_Data.Country, Covid_Data.timestamp_id, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
             order by timestamp_id) 
         group by country, unemployment_time_stamp, population, value
         order by unemployment_time_stamp
-    `, [country]);
+    `, [country, startTime, endTime]);
 }
 
-async function trendQuery5() {
+/**
+ * @param {number} startTime Start time as unix time
+ * @param {number} endTime End time as unix time
+ */
+async function trendQuery5(startTime, endTime) {
     return await query(`
         select (Deaths_Country / Deaths_Worldwide) * 100 as Deaths_Contributed, Deaths_Country, Deaths_Worldwide, worldTime
         from
             (select SUM(Deaths) as Deaths_Worldwide, TIMESTAMP_ID as worldTime from "J.LUO".COVID_DATA where deaths is not null group by timestamp_id) worldData,
             (select SUM(Deaths) as Deaths_Country, TIMESTAMP_ID as countryTime, Country from "J.LUO".COVID_DATA where country = 'United States' and deaths is not null group by TIMESTAMP_ID, Country) countryData
-        where worldTime = countryTime order by worldTime
-    `);
+        where worldTime = countryTime and (timestamp_id >= :1 and timestamp_id <= :2)
+        order by worldTime
+    `, [startTime, endTime]);
 }
 
-async function trendQuery6(country) {
+/**
+ * @param {string} country Country name
+ * @param {number} startTime Start time as unix time
+ * @param {number} endTime End time as unix time
+ */
+async function trendQuery6(country, startTime, endTime) {
     return await query(`select timestamp_id, confirmed, (confirmed - lag(confirmed, 1) over (order by timestamp_id)) as delta_confirmed
     from (
         select timestamp_id, sum(confirmed) as confirmed
         from "J.LUO".COVID_DATA
-        where country = :1
+        where country = :1 and (timestamp_id >= :2 and timestamp_id <= :3)
         group by timestamp_id
     )
-    order by timestamp_id`, [country]);
+    order by timestamp_id`, [country, startTime, endTime]);
 };
 
 async function loginUser(username, password) {
