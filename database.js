@@ -132,16 +132,16 @@ async function trendQuery2(country, startTime, endTime) {
  */
 async function trendQuery3(country, startTime, endTime) {
     return await query(`
-        select 
+        select
             country, timestamp_id,
-            Total_Incidence,
-            Total_Incidence - Lag(Total_Incidence, 1) OVER(partition by country ORDER BY country ASC) AS Incidence_Difference, 
+            Total_Confirmed,
+            Total_Confirmed - Lag(Total_Confirmed, 1) OVER(partition by country ORDER BY country ASC) AS Confirmed_Difference,
             Total_Deaths,
-            Total_Deaths - Lag(Total_Deaths, 1) OVER(partition by country ORDER BY country ASC) AS Death_Differences 
+            Total_Deaths - Lag(Total_Deaths, 1) OVER(partition by country ORDER BY country ASC) AS Death_Differences
         FROM (
-            select country, AVG(incidence) AS Total_Incidence, SUM(deaths) AS Total_Deaths, timestamp_id 
+            select country, SUM(confirmed) AS Total_Confirmed, SUM(deaths) AS Total_Deaths, timestamp_id
             FROM "J.LUO".Covid_Data
-            WHERE incidence is not null
+            WHERE confirmed is not null and deaths is not null
             Group By country, timestamp_id
             order by country,timestamp_id
         )
@@ -156,17 +156,17 @@ async function trendQuery3(country, startTime, endTime) {
  */
 async function trendQuery4(country, startTime, endTime) {
     return await query(`
-        select country, avg(Avg_Incidence), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
-            select covid_data.timestamp_id, Covid_Data.country, AVG(Covid_Data.incidence) as Avg_Incidence, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
-            FROM "J.LUO".Covid_Data, "J.LUO".Unemployment, "J.LUO".Country
-            WHERE Covid_Data.country = Unemployment.country_name AND Covid_Data.Country = Country.name AND incidence is not null 
-            AND covid_data.timestamp_id <= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) + 2592000 
+        select country, avg(Avg_Confirmed), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
+            select covid_data.timestamp_id, covid_data.country, SUM(covid_data.confirmed) as Avg_Confirmed, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
+            FROM "J.LUO".covid_data, "J.LUO".Unemployment, "J.LUO".Country
+            WHERE covid_data.country = Unemployment.country_name AND covid_data.Country = Country.name AND confirmed is not null
+            AND covid_data.timestamp_id <= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) + 2592000
             and covid_data.timestamp_id >= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400)
             and covid_data.country = :1 and (timestamp_id >= :2 and timestamp_id <= :3)
-            GROUP BY Covid_Data.Country, Covid_Data.timestamp_id, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
-            order by timestamp_id) 
+            GROUP BY covid_data.Country, covid_data.timestamp_id, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
+            order by timestamp_id)
         group by country, unemployment_time_stamp, population, value
-        order by unemployment_time_stamp
+        order by unemployment_time_stamp;
     `, [country, startTime, endTime]);
 }
 
