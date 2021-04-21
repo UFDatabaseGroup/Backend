@@ -156,10 +156,10 @@ async function trendQuery3(country, startTime, endTime) {
  */
 async function trendQuery4(country, startTime, endTime) {
     return await query(`
-        select country, avg(confirmed), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
-            select covid_data.timestamp_id, covid_data.country, SUM(covid_data.confirmed) as confirmed, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
+        select country, avg(active), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
+            select covid_data.timestamp_id, covid_data.country, SUM(covid_data.active) as active, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
             FROM "J.LUO".covid_data, "J.LUO".Unemployment, "J.LUO".Country
-            WHERE covid_data.country = Unemployment.country_name AND covid_data.Country = Country.name AND confirmed is not null
+            WHERE covid_data.country = Unemployment.country_name AND covid_data.Country = Country.name AND active is not null AND active >= 0
             AND covid_data.timestamp_id <= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) + 2592000
             and covid_data.timestamp_id >= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400)
             and covid_data.country = :1 and (timestamp_id >= :2 and timestamp_id <= :3)
