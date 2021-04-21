@@ -135,9 +135,9 @@ async function trendQuery3(country, startTime, endTime) {
         select
             country, timestamp_id,
             Total_Confirmed,
-            Total_Confirmed - Lag(Total_Confirmed, 1) OVER(partition by country ORDER BY country ASC) AS Confirmed_Difference,
+            Total_Confirmed - Lag(Total_Confirmed, 1) OVER(partition by country ORDER BY timestamp_id ASC) AS Confirmed_Difference,
             Total_Deaths,
-            Total_Deaths - Lag(Total_Deaths, 1) OVER(partition by country ORDER BY country ASC) AS Death_Differences
+            Total_Deaths - Lag(Total_Deaths, 1) OVER(partition by country ORDER BY timestamp_id ASC) AS Death_Differences
         FROM (
             select country, SUM(confirmed) AS Total_Confirmed, SUM(deaths) AS Total_Deaths, timestamp_id
             FROM "J.LUO".Covid_Data
