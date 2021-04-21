@@ -156,8 +156,8 @@ async function trendQuery3(country, startTime, endTime) {
  */
 async function trendQuery4(country, startTime, endTime) {
     return await query(`
-        select country, avg(Avg_Confirmed), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
-            select covid_data.timestamp_id, covid_data.country, SUM(covid_data.confirmed) as Avg_Confirmed, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
+        select country, avg(confirmed), unemployment_time_stamp, value/100 * population AS Unemployment_Number, value from (
+            select covid_data.timestamp_id, covid_data.country, SUM(covid_data.confirmed) as confirmed, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
             FROM "J.LUO".covid_data, "J.LUO".Unemployment, "J.LUO".Country
             WHERE covid_data.country = Unemployment.country_name AND covid_data.Country = Country.name AND confirmed is not null
             AND covid_data.timestamp_id <= ((Unemployment.unemployment_time_stamp - TO_DATE('01-JAN-70', 'DD-MON-RR')) * 86400) + 2592000
@@ -166,7 +166,7 @@ async function trendQuery4(country, startTime, endTime) {
             GROUP BY covid_data.Country, covid_data.timestamp_id, Unemployment.value, Unemployment.unemployment_time_stamp, Country.population
             order by timestamp_id)
         group by country, unemployment_time_stamp, population, value
-        order by unemployment_time_stamp;
+        order by unemployment_time_stamp
     `, [country, startTime, endTime]);
 }
 
